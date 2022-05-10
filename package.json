@@ -1,12 +1,12 @@
 {
-  "name": "slick-ddb",
+  "name": "slick-dynamodb",
   "version": "1.0.0",
-  "main": "./dist/slick-ddb.cjs",
-  "module": "./dist/slick-ddb.mjs",
+  "main": "./dist/slick-dynamodb.cjs",
+  "module": "./dist/slick-dynamodb.mjs",
   "exports": {
     ".": {
-      "require": "./dist/slick-ddb.cjs",
-      "import": "./dist/slick-ddb.mjs"
+      "require": "./dist/slick-dynamodb.cjs",
+      "import": "./dist/slick-dynamodb.mjs"
     }
   },
   "scripts": {

@@ -33,7 +33,12 @@ These expressions can be referred to as "`x()`-expressions".
 ## Example
 
 ```typescript
-import { SlickDynamoDB, joined as x, name as n, value as v } from "slick-ddb";
+import {
+  SlickDynamoDB,
+  joined as x,
+  name as n,
+  value as v,
+} from "slick-dynamodb";
 
 const user = "evan";
 const client = new SlickDynamoDB(documentClient);
@@ -111,3 +116,8 @@ type. See the below table for details:
 | UpdateExpression                                                  | Expressions are joined by a space character.                         |
 | ConditionExpression, KeyConditionExpression, and FilterExpression | Expressions are joined by "AND". Each expression is wrapped with (). |
 | ProjectionExpression                                              | Expressions are joined by a comma.                                   |
+
+---
+
+`I am` / `this work is` not affiliated, associated, authorized, endorsed by, or in any way
+officially connected with the Amazon, or any of its subsidiaries or its affiliates.
