@@ -120,4 +120,4 @@ type. See the below table for details:
 ---
 
 `I am` / `this work is` not affiliated, associated, authorized, endorsed by, or in any way
-officially connected with the Amazon, or any of its subsidiaries or its affiliates.
+officially connected with Amazon, or any of its subsidiaries or its affiliates.
