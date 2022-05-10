@@ -15,8 +15,7 @@
     "test:coverage": "jest --runInBand --coverage --config jest.config.ts",
     "lint:scripts": "eslint . --ext .ts",
     "format:scripts": "prettier . --write",
-    "format": "npm run format:scripts",
-    "prepare": "husky install && husky add .husky/pre-commit 'npx lint-staged' && git add .husky/pre-commit"
+    "format": "npm run format:scripts"
   },
   "peerDependencies": {
     "aws-sdk": "^2.1099.0"
@@ -31,7 +30,6 @@
     "eslint": "^8.11.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "husky": "^7.0.4",
     "jest": "^27.5.1",
     "lint-staged": "^12.3.7",
     "prettier": "^2.6.1",
