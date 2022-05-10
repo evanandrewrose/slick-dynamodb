@@ -9,6 +9,7 @@
       "import": "./dist/slick-dynamodb.mjs"
     }
   },
+  "types": "./dist/slick-dynamodb.d.ts",
   "scripts": {
     "build": "tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts",
     "test": "jest --config jest.config.ts",
