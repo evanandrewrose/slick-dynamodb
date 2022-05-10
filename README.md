@@ -1,5 +1,7 @@
 # Slick DynamoDB
 
+[![Node.js CI](https://github.com/evanandrewrose/slick-dynamodb/actions/workflows/node.js.yml/badge.svg)](https://github.com/evanandrewrose/slick-dynamodb/actions/workflows/node.js.yml)
+
 This is a small wrapper around the [DynamoDB Document
 Client](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html), which
 removes the burden of managing attribute names and values by introducing helper methods that are
