@@ -32,6 +32,10 @@ becomes:
 
 These expressions can be referred to as "`x()`-expressions".
 
+## Installation
+
+`npm i --save slick-dynamodb`
+
 ## Example
 
 ```typescript
