@@ -8,12 +8,9 @@ removes the burden of managing [attribute
 names](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeNames.html)
 and
 [values](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeValues.html)
-by introducing helper methods that are used in conjunction with the wrapper.
+by introducing helper methods that are used in conjunction with the `SlickDynamoDB` wrapper.
 
-To use, just write your expressions as a list of strings/attributes and then wrap the attribute
-names with `n()` and values with `v()`.
-
-So this:
+See the comparison below:
 
 ```typescript
 { // dynamodb document api
@@ -25,23 +22,24 @@ So this:
       ':new_count': 1
   }
 }
-```
 
-becomes:
+// is equivalent to:
 
-```typescript
 { // slick api
   UpdateExpression: ["set path.to.", n('count'), " = ", v(1)],
 }
 ```
 
-These expressions can be referred to as "`x()`-expressions".
-
 ## Installation
 
-`npm i --save slick-dynamodb`
+```sh
+npm i --save slick-dynamodb
+```
 
-## Example
+## Example Usage
+
+To use, just import the APIs as shown below and then write your expressions as a list of
+strings/attributes by wrapping the attribute names with `n()` and values with `v()`.
 
 ```typescript
 import { SlickDynamoDB, name as n, value as v } from "slick-dynamodb";
@@ -103,29 +101,50 @@ await documentClient
   .promise();
 ```
 
-## Other APIs
+## Working with the client APIs
 
 All of the DynamoDB Document APIs are supported. If the Document API allowed you to reference a
 given input property, then SlickDynamoDB expects a `SlickExpression`.
 
 A `SlickExpression` can be:
 
-## Passing arrays of "`x()`-expressions"
+- A unary expression:
+  - single attribute: `v(123)`
+  - string: `"attribute_exists(foo)"`
+- A composite expression:
+  - attributes and strings: ['name = ', n('evan')]
+  - only attributes: [n('foo'), n('bar')]
+- A list of composite expressions:
+  - list of above expressions: [["foo = ", n(foo)], ["bar = ", v(bar)]]
 
-For all of the expression input properties, you can either pass an array of "`x()`-expressions" or
-a single "`x()`-expression".
+## Passing a list of composite expressions
 
-The rules for what happens when you pass an array depends on the type of expressions you're working
-with, but they're generally what you would want if you we're sending multiple expressions of the
-type. See the below table for details:
+The rules for what happens when you pass a composite expression (2d array) depends on the type of
+expressions you're working with, but they're generally what you would want if you we're sending
+multiple expressions of the same type. See the below table for details:
 
 | Type                                                              | Description                                                          |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------- |
 | UpdateExpression                                                  | Expressions are joined by a space character.                         |
 | ConditionExpression, KeyConditionExpression, and FilterExpression | Expressions are joined by "AND". Each expression is wrapped with (). |
-| ProjectionExpression                                              | Expressions are joined by a comma.                                   |
+| ProjectionExpression                                              | Won't pass type check.                                               |
+
+### Projection Expressions
+
+Because projections are csv-lists, the API will only accept single-dimensional expressions. Below
+are examples:
+
+```typescript
+ProjectionExpression: "foo"; // valid
+ProjectionExpression: n("foo"); // valid
+ProjectionExpression: [n("foo"), n("bar")]; // valid
+ProjectionExpression: [
+  [n("foo"), n("bar")],
+  [n("foo"), n("bar")],
+]; // invalid, won't compile
+```
 
 ---
 
-`I am` / `this work is` not affiliated, associated, authorized, endorsed by, or in any way
-officially connected with Amazon, or any of its subsidiaries or its affiliates.
+This work is not affiliated, associated, authorized, endorsed by, or in any way officially connected
+with Amazon, or any of its subsidiaries or its affiliates.

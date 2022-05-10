@@ -72,6 +72,57 @@ describe("SlickDynamoDB client get method", () => {
     );
   });
 
+  it("generates attribute names for a scalar attribute projection expression", () => {
+    const slick = new SlickDynamoDB(client);
+    slick.get({
+      TableName: "table",
+      Key: {
+        pk: "pk",
+        sk: "sk",
+      },
+      ProjectionExpression: n("id"),
+    });
+
+    expect(client.get).toHaveBeenCalledWith(
+      {
+        TableName: "table",
+        Key: {
+          pk: "pk",
+          sk: "sk",
+        },
+        ProjectionExpression: "#k0",
+        ExpressionAttributeNames: {
+          "#k0": "id",
+        },
+      } as DocumentClient.GetItemInput,
+      undefined
+    );
+  });
+
+  it("generates attribute names for a scalar string expression", () => {
+    const slick = new SlickDynamoDB(client);
+    slick.get({
+      TableName: "table",
+      Key: {
+        pk: "pk",
+        sk: "sk",
+      },
+      ProjectionExpression: "id",
+    });
+
+    expect(client.get).toHaveBeenCalledWith(
+      {
+        TableName: "table",
+        Key: {
+          pk: "pk",
+          sk: "sk",
+        },
+        ProjectionExpression: "id",
+      } as DocumentClient.GetItemInput,
+      undefined
+    );
+  });
+
   it("generates attribute names for multiple projection expressions", () => {
     const slick = new SlickDynamoDB(client);
     slick.get({

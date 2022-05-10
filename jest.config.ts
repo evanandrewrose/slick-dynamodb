@@ -6,7 +6,6 @@ module.exports = {
   },
   resetMocks: true,
   maxWorkers: 1,
-
   modulePathIgnorePatterns: ["./dist/", "./test/mocks.ts"],
   coveragePathIgnorePatterns: ["./test/mocks.ts"],
 };
