@@ -1,6 +1,6 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { joined as x, name as n, SlickDynamoDB } from "../../src";
-import { SlickGetItemInput } from "../../src/types";
+import { name as n, SlickDynamoDB } from "../../src";
+import { SlickGetItemInput } from "../../src/slickTypes";
 
 jest.mock("aws-sdk/clients/dynamodb");
 
@@ -53,7 +53,7 @@ describe("SlickDynamoDB client get method", () => {
         pk: "pk",
         sk: "sk",
       },
-      ProjectionExpression: x(n("id")),
+      ProjectionExpression: [n("id")],
     });
 
     expect(client.get).toHaveBeenCalledWith(

@@ -1,5 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { joined as x, name as n, SlickDynamoDB, value as v } from "../../src";
+import { name as n, SlickDynamoDB, value as v } from "../../src";
 
 jest.mock("aws-sdk/clients/dynamodb");
 
@@ -22,7 +22,7 @@ describe("SlickDynamoDB client scan method", () => {
       TotalSegments: 1,
       Segment: 0,
       ProjectionExpression: [n("mock_p"), n("mock_v")],
-      FilterExpression: x(n("mock_f"), " > ", v(3)),
+      FilterExpression: [n("mock_f"), " > ", v(3)],
       ConsistentRead: true,
     });
 

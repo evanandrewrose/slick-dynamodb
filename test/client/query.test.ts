@@ -1,5 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { joined as x, name as n, SlickDynamoDB, value as v } from "../../src";
+import { name as n, SlickDynamoDB, value as v } from "../../src";
 
 jest.mock("aws-sdk/clients/dynamodb");
 
@@ -14,10 +14,10 @@ describe("SlickDynamoDB client query method", () => {
     const slick = new SlickDynamoDB(client);
     slick.query({
       TableName: "table",
-      KeyConditionExpression: x("attribute_exists(", n("mock_a"), ")"),
+      KeyConditionExpression: ["attribute_exists(", n("mock_a"), ")"],
       ConsistentRead: true,
       ExclusiveStartKey: {},
-      FilterExpression: x(n("mock_b"), " > ", v(3)),
+      FilterExpression: [n("mock_b"), " > ", v(3)],
       ProjectionExpression: [n("mock_c"), n("mock_d")],
       Limit: 20,
       Select: "ALL_ATTRIBUTES",

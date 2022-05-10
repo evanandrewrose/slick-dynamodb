@@ -1,5 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { joined as x, name as n, SlickDynamoDB, value as v } from "../../src";
+import { name as n, SlickDynamoDB, value as v } from "../../src";
 
 jest.mock("aws-sdk/clients/dynamodb");
 
@@ -19,7 +19,7 @@ describe("SlickDynamoDB client delete method", () => {
         pk: "mock_pk",
         sk: "mock_sk",
       },
-      ConditionExpression: x(n("mock_name"), " == ", v("mock_value")),
+      ConditionExpression: [n("mock_name"), " == ", v("mock_value")],
       ReturnItemCollectionMetrics: "mock",
       ReturnValues: "ALL_OLD",
     });

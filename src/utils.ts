@@ -1,7 +1,6 @@
 import {
   InlineAttributeName,
   InlineAttributeValue,
-  JoinedExpression,
   SingleDimensionalArrayImplies,
   SlickExpressionInput,
   SlickExpressionToken,
@@ -30,17 +29,13 @@ const isString = (input: any): boolean =>
 
 const mapSlickExpressionInput = <T>(
   input: SlickExpressionInput,
-  expression: (joinedExpression: JoinedExpression) => T,
   token: (singleToken: SlickExpressionToken) => T,
   arrayOfTokens: (arrayOfTokens: SlickExpressionToken[]) => T,
-  arrayOfExpressions: (arrayOfExpressions: JoinedExpression[]) => T,
   arrayOfArrayOfTokens: (
     arrayOfArrayOfTokens: Array<SlickExpressionToken[]>
   ) => T
 ) => {
-  if (input instanceof JoinedExpression) {
-    return expression(input);
-  } else if (
+  if (
     input instanceof InlineAttributeName ||
     input instanceof InlineAttributeValue ||
     isString(input)
@@ -57,8 +52,6 @@ const mapSlickExpressionInput = <T>(
       input[0] instanceof InlineAttributeValue
     ) {
       return arrayOfTokens(input as Array<SlickExpressionToken>);
-    } else if (input[0] instanceof JoinedExpression) {
-      return arrayOfExpressions(input as Array<JoinedExpression>);
     } else if (Array.isArray(input[0])) {
       return arrayOfArrayOfTokens(input as Array<Array<SlickExpressionToken>>);
     }
@@ -68,7 +61,7 @@ const mapSlickExpressionInput = <T>(
 };
 
 /**
- * Converts a {@see SlickExpressionInput} into an array of {@see JoinedExpression}.
+ * Converts a {@see SlickExpressionInput} into an Array<Array<SlickExpressionToken>>.
  *
  * @param input
  * @returns list of joined expressions
@@ -76,24 +69,17 @@ const mapSlickExpressionInput = <T>(
 export const normalizeSlickExpressionInput = (
   input: SlickExpressionInput,
   singleDimensionalArrayImplication: SingleDimensionalArrayImplies
-): JoinedExpression[] =>
+): SlickExpressionToken[][] =>
   mapSlickExpressionInput(
     input,
-    (joinedExpression) => [joinedExpression],
-    (singleToken) => [new JoinedExpression(singleToken)],
+    (singleToken) => [[singleToken]],
     (arrayOfTokens) => {
       switch (singleDimensionalArrayImplication) {
         case SingleDimensionalArrayImplies.EachElementIsExpression:
-          return [
-            ...arrayOfTokens.map((element) => new JoinedExpression(element)),
-          ];
+          return [...arrayOfTokens.map((element) => [element])];
         case SingleDimensionalArrayImplies.EachElementIsToken:
-          return [new JoinedExpression(...arrayOfTokens)];
+          return [arrayOfTokens];
       }
     },
-    (arrayOfExpressions) => arrayOfExpressions,
-    (arrayOfArrayOfTokens) =>
-      arrayOfArrayOfTokens.map(
-        (arrayOfTokens) => new JoinedExpression(...arrayOfTokens)
-      )
+    (arrayOfExpressions) => arrayOfExpressions
   );

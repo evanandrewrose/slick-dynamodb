@@ -1,5 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { joined as x, name as n, SlickDynamoDB, value as v } from "../../src";
+import { name as n, SlickDynamoDB, value as v } from "../../src";
 
 jest.mock("aws-sdk/clients/dynamodb");
 
@@ -24,8 +24,8 @@ describe("SlickDynamoDB client transactWrite method", () => {
               sk: "mock_sk",
             },
             ConditionExpression: [
-              x("attribute_exists(", n("mock_cond_expr_attr"), ")"),
-              x(n("mock_cond_expr_attr1"), " < ", v(100)),
+              ["attribute_exists(", n("mock_cond_expr_attr"), ")"],
+              [n("mock_cond_expr_attr1"), " < ", v(100)],
             ],
             ReturnValuesOnConditionCheckFailure: "mock",
           },
@@ -36,8 +36,8 @@ describe("SlickDynamoDB client transactWrite method", () => {
               sk: "mock_sk",
             },
             ConditionExpression: [
-              x("attribute_exists(", n("mock_delete_attr"), ")"),
-              x(n("mock_delete_attr1"), " < ", v(3)),
+              ["attribute_exists(", n("mock_delete_attr"), ")"],
+              [n("mock_delete_attr1"), " < ", v(3)],
             ],
             ReturnValuesOnConditionCheckFailure: "mock",
           },
@@ -51,9 +51,9 @@ describe("SlickDynamoDB client transactWrite method", () => {
               other: "mock_other",
             },
             ConditionExpression: [
-              x("attribute_exists(", n("mock_put_attr"), ")"),
-              x(n("mock_put_attr1"), " < ", v(42)),
-              x(n("mock_put_attr2"), " = ", v("mock_put_value")),
+              ["attribute_exists(", n("mock_put_attr"), ")"],
+              [n("mock_put_attr1"), " < ", v(42)],
+              [n("mock_put_attr2"), " = ", v("mock_put_value")],
             ],
           },
         },
@@ -65,13 +65,13 @@ describe("SlickDynamoDB client transactWrite method", () => {
               sk: "mock_sk4",
             },
             UpdateExpression: [
-              x("set ", n("update_attr"), " = ", v("update_value")),
-              x("add ", n("counter"), " ", v(1)),
+              ["set ", n("update_attr"), " = ", v("update_value")],
+              ["add ", n("counter"), " ", v(1)],
             ],
             ConditionExpression: [
-              x("attribute_exists(", n("mock_update_cond_attr"), ")"),
-              x(n("mock_cond_attr1"), " < ", v(21)),
-              x(n("mock_cond_attr2"), " = ", v("mock_cond_value")),
+              ["attribute_exists(", n("mock_update_cond_attr"), ")"],
+              [n("mock_cond_attr1"), " < ", v(21)],
+              [n("mock_cond_attr2"), " = ", v("mock_cond_value")],
             ],
             ReturnValuesOnConditionCheckFailure: "mock",
           },

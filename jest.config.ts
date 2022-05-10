@@ -5,6 +5,8 @@ module.exports = {
     "^.+\\.(ts)$": "ts-jest",
   },
   resetMocks: true,
+  maxWorkers: 1,
+
   modulePathIgnorePatterns: ["./dist/", "./test/mocks.ts"],
   coveragePathIgnorePatterns: ["./test/mocks.ts"],
 };

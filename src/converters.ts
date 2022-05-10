@@ -17,7 +17,6 @@ import {
   SlickUpdate,
   InlineAttributeName,
   InlineAttributeValue,
-  JoinedExpression,
   SlickExpressionToken,
 } from "./slickTypes";
 import {
@@ -447,13 +446,13 @@ export class SlickConverter {
   };
 
   private static keyJoinedExpression = (
-    expression: JoinedExpression,
+    expression: SlickExpressionToken[],
     names: Record<string, string>,
     values: Record<string, any>
   ): string | string[] => {
     // Determine the final string by substituting inline attributes with the keys to them. Along the
     // way, store the keys and their associated values in names and values.
-    return expression.expressions
+    return expression
       .map((expression): SlickExpressionToken => {
         if (expression instanceof InlineAttributeName) {
           const index = Object.keys(names).length;

@@ -1,6 +1,6 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { joined as x, name as n, SlickDynamoDB, value as v } from "../../src";
-import { SlickUpdateItemInput } from "../../src/types";
+import { name as n, SlickDynamoDB, value as v } from "../../src";
+import { SlickUpdateItemInput } from "../../src/slickTypes";
 
 jest.mock("aws-sdk/clients/dynamodb");
 
@@ -102,7 +102,7 @@ describe("SlickDynamoDB client update method", () => {
         pk: "pk",
         sk: "sk",
       },
-      ConditionExpression: x("attribute_exists(", n("mock"), ")"),
+      ConditionExpression: ["attribute_exists(", n("mock"), ")"],
     });
 
     expect(client.update).toHaveBeenCalledWith(
@@ -130,8 +130,8 @@ describe("SlickDynamoDB client update method", () => {
         sk: "sk",
       },
       ConditionExpression: [
-        x("attribute_exists(", n("mock"), ")"),
-        x(n("mock"), " < ", v(3)),
+        ["attribute_exists(", n("mock"), ")"],
+        [n("mock"), " < ", v(3)],
       ],
     });
 
