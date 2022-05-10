@@ -11,11 +11,12 @@
   },
   "types": "./dist/slick-dynamodb.d.ts",
   "scripts": {
+    "check": "tsc && npm run test && npm run lint",
     "build": "tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts",
     "test:watch": "jest --config --watch jest.config.ts",
     "test": "jest --config jest.config.ts",
     "test:coverage": "jest --runInBand --coverage --config jest.config.ts",
-    "lint:scripts": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts",
     "format:scripts": "prettier . --write",
     "format": "npm run format:scripts"
   },
