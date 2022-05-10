@@ -1,6 +1,6 @@
 {
   "name": "slick-dynamodb",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "main": "./dist/slick-dynamodb.cjs",
   "module": "./dist/slick-dynamodb.mjs",
   "exports": {
