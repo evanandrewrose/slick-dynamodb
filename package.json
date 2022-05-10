@@ -1,6 +1,6 @@
 {
   "name": "slick-dynamodb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./dist/slick-dynamodb.cjs",
   "module": "./dist/slick-dynamodb.mjs",
   "exports": {
@@ -35,6 +35,7 @@
     "lint-staged": "^12.3.7",
     "prettier": "^2.6.1",
     "ts-jest": "^27.1.4",
+    "ts-node": "^10.7.0",
     "typescript": "^4.5.4",
     "vite": "^2.8.0"
   }
