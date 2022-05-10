@@ -12,6 +12,7 @@
   "types": "./dist/slick-dynamodb.d.ts",
   "scripts": {
     "build": "tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts",
+    "test:watch": "jest --config --watch jest.config.ts --max-workers=1",
     "test": "jest --config jest.config.ts",
     "test:coverage": "jest --runInBand --coverage --config jest.config.ts",
     "lint:scripts": "eslint . --ext .ts",
@@ -19,7 +20,7 @@
     "format": "npm run format:scripts"
   },
   "peerDependencies": {
-    "aws-sdk": "^2.1099.0"
+    "aws-sdk": "^2.1131.0"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",

@@ -11,8 +11,9 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "noEmit": true,
-    "noUnusedLocals": false, // toggle when done writing tests
-    "noUnusedParameters": false, // toggle when done writing tests
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["vite/client", "node", "jest"]

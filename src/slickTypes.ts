@@ -1,20 +1,38 @@
 import { DynamoDB } from "aws-sdk";
 
-export type SlickExpression =
+export type SlickExpressionToken =
   | string
   | InlineAttributeName
   | InlineAttributeValue;
 
+export enum SingleDimensionalArrayImplies {
+  EachElementIsToken,
+  EachElementIsExpression,
+}
+
 /**
- * A wrapper for a list of {@link SlickExpression} types.
+ * A wrapper for a list of {@link SlickExpressionToken} types.
  */
 export class JoinedExpression {
-  public expressions: SlickExpression[];
+  public expressions: SlickExpressionToken[];
 
-  constructor(...expressions: SlickExpression[]) {
+  constructor(...expressions: SlickExpressionToken[]) {
     this.expressions = expressions;
   }
 }
+
+export type SlickExpressionInput =
+  | JoinedExpression
+  | JoinedExpression[]
+  | Array<Array<SlickExpressionToken>>
+  | SlickExpressionToken
+  | SlickExpressionToken[];
+
+export type OneDimensionalSlickExpressionInput =
+  | JoinedExpression
+  | Array<SlickExpressionToken>
+  | SlickExpressionToken
+  | SlickExpressionToken[];
 
 export type SlickUpdateItemInput = Omit<
   DynamoDB.DocumentClient.UpdateItemInput,
@@ -23,8 +41,8 @@ export type SlickUpdateItemInput = Omit<
   | "ExpressionAttributeValues"
   | "ExpressionAttributeNames"
 > & {
-  UpdateExpression?: JoinedExpression | JoinedExpression[];
-  ConditionExpression?: JoinedExpression | JoinedExpression[];
+  UpdateExpression?: SlickExpressionInput;
+  ConditionExpression?: SlickExpressionInput;
 };
 
 export type SlickScanInput = Omit<
@@ -34,8 +52,8 @@ export type SlickScanInput = Omit<
   | "ExpressionAttributeValues"
   | "ExpressionAttributeNames"
 > & {
-  ProjectionExpression?: JoinedExpression | JoinedExpression[];
-  FilterExpression?: JoinedExpression | JoinedExpression[];
+  ProjectionExpression?: OneDimensionalSlickExpressionInput;
+  FilterExpression?: SlickExpressionInput;
 };
 
 export type SlickPutItemInput = Omit<
@@ -44,7 +62,7 @@ export type SlickPutItemInput = Omit<
   | "ExpressionAttributeValues"
   | "ExpressionAttributeNames"
 > & {
-  ConditionExpression?: JoinedExpression | JoinedExpression[];
+  ConditionExpression?: SlickExpressionInput;
 };
 
 export type SlickGetItemInput = Omit<
@@ -53,7 +71,7 @@ export type SlickGetItemInput = Omit<
   | "ExpressionAttributeValues"
   | "ExpressionAttributeNames"
 > & {
-  ProjectionExpression?: JoinedExpression | JoinedExpression[];
+  ProjectionExpression?: OneDimensionalSlickExpressionInput;
 };
 
 export type SlickDeleteItemInput = Omit<
@@ -62,14 +80,14 @@ export type SlickDeleteItemInput = Omit<
   | "ExpressionAttributeValues"
   | "ExpressionAttributeNames"
 > & {
-  ConditionExpression?: JoinedExpression | JoinedExpression[];
+  ConditionExpression?: SlickExpressionInput;
 };
 
 export type SlickKeysAndAttributes = Omit<
   DynamoDB.DocumentClient.KeysAndAttributes,
   "ExpressionAttributeNames" | "ProjectionExpression"
 > & {
-  ProjectionExpression?: JoinedExpression | JoinedExpression[];
+  ProjectionExpression?: OneDimensionalSlickExpressionInput;
 };
 
 export type SlickBatchGetRequestMap = { [key: string]: SlickKeysAndAttributes };
@@ -85,7 +103,7 @@ export type SlickGet = Omit<
   DynamoDB.DocumentClient.Get,
   "ProjectionExpression" | "ExpressionAttributeNames"
 > & {
-  ProjectionExpression?: JoinedExpression | JoinedExpression[];
+  ProjectionExpression?: OneDimensionalSlickExpressionInput;
 };
 
 export type SlickTransactGetItem = Omit<
@@ -110,7 +128,7 @@ export type SlickPut = Omit<
   | "ExpressionAttributeNames"
   | "ExpressionAttributeValues"
 > & {
-  ConditionExpression?: JoinedExpression | JoinedExpression[];
+  ConditionExpression?: SlickExpressionInput;
 };
 
 export type SlickDelete = Omit<
@@ -119,7 +137,7 @@ export type SlickDelete = Omit<
   | "ExpressionAttributeNames"
   | "ExpressionAttributeValues"
 > & {
-  ConditionExpression?: JoinedExpression | JoinedExpression[];
+  ConditionExpression?: SlickExpressionInput;
 };
 
 export type SlickUpdate = Omit<
@@ -129,8 +147,8 @@ export type SlickUpdate = Omit<
   | "ExpressionAttributeNames"
   | "ExpressionAttributeValues"
 > & {
-  UpdateExpression: JoinedExpression | JoinedExpression[];
-  ConditionExpression?: JoinedExpression | JoinedExpression[];
+  UpdateExpression: SlickExpressionInput;
+  ConditionExpression?: SlickExpressionInput;
 };
 
 export type SlickConditionCheck = Omit<
@@ -139,7 +157,7 @@ export type SlickConditionCheck = Omit<
   | "ExpressionAttributeNames"
   | "ExpressionAttributeValues"
 > & {
-  ConditionExpression: JoinedExpression | JoinedExpression[];
+  ConditionExpression: SlickExpressionInput;
 };
 
 export type SlickTransactWriteItem = Omit<
@@ -169,9 +187,9 @@ export type SlickQueryInput = Omit<
   | "ExpressionAttributeValues"
   | "ExpressionAttributeNames"
 > & {
-  ProjectionExpression?: JoinedExpression | JoinedExpression[];
-  FilterExpression?: JoinedExpression | JoinedExpression[];
-  KeyConditionExpression: JoinedExpression | JoinedExpression[];
+  ProjectionExpression?: OneDimensionalSlickExpressionInput;
+  FilterExpression?: SlickExpressionInput;
+  KeyConditionExpression: SlickExpressionInput;
 };
 
 /**

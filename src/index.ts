@@ -1,38 +1,20 @@
 import { AWSError, DynamoDB } from "aws-sdk";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { Request } from "aws-sdk/lib/request";
+import { SlickConverter } from "./converters";
 import {
   InlineAttributeName,
-  SlickScanInput,
-  SlickUpdateItemInput,
-  SlickQueryInput,
-  SlickPutItemInput,
-  SlickGetItemInput,
-  SlickDeleteItemInput,
-  SlickBatchGetItemInput,
-  SlickConditionCheck,
-  SlickDelete,
-  SlickPut,
-  SlickUpdate,
-  SlickTransactWriteItemsInput,
-  SlickTransactGetItemsInput,
-  SlickExpression,
   InlineAttributeValue,
-  JoinedExpression,
-} from "./types";
-import { undefinedIfEmpty, clean } from "./utils";
-
-const GeneratedKeyPrefix = "k";
-
-/**
- * Helper to instantiate a {@link JoinedExpression}.
- *
- * @param expressions a list of {@link SlickExpression} types (strings, {@link InlineAttributeName},
- * and {@link InlineAttributeValue}).
- * @returns a joined expression
- */
-export const joined = (...expressions: SlickExpression[]) =>
-  new JoinedExpression(...expressions);
+  SlickBatchGetItemInput,
+  SlickDeleteItemInput,
+  SlickGetItemInput,
+  SlickPutItemInput,
+  SlickQueryInput,
+  SlickScanInput,
+  SlickTransactGetItemsInput,
+  SlickTransactWriteItemsInput,
+  SlickUpdateItemInput,
+} from "./slickTypes";
 
 /**
  * Helper to instantiate a {@link InlineAttributeName}.
@@ -74,414 +56,12 @@ export class SlickDynamoDB {
   }
 
   /**
-   * Interpret the given {@link expression} string (or strings) as an update expression. DynamoDB
-   * expects multiple boolean expressions to be "AND"ed together, with each component contained in
-   * parenthesis. This is the case for both Condition Expressions and Filter Expressions.
-   *
-   * @param expression expression or list of expressions to join
-   * @returns string form of the evaluated expresssion
+   * Creates a set of elements inferring the type of set from the type of the first element. Amazon DynamoDB currently supports the number sets, string sets, and binary sets. For more information about DynamoDB data types see the documentation on the Amazon DynamoDB Data Model.
    */
-  private static booleanExpressionsAsString = (expression: string | string[]) =>
-    Array.isArray(expression)
-      ? expression.map((expression) => `(${expression})`).join(" AND ")
-      : expression;
-
-  /**
-   * Interpret the given {@link expression} string (or strings) as a csv expression. DynamoDB
-   * expects csv expressions to be delimited by commas. This is the case for projection expressions.
-   *
-   * @param expression expression or list of expressions to join
-   * @returns string form of the evaluated expresssion
-   */
-  private static csvExpressionsAsString = (expression: string | string[]) =>
-    Array.isArray(expression) ? expression.join(", ") : expression;
-
-  /**
-   * Interpret the given {@link expression} string (or strings) as an update expression. DynamoDB
-   * expects space-delimited expressions.
-   *
-   * @param expression expression or list of expressions to join
-   * @returns string form of the evaluated expresssion
-   */
-  private static updateExpressionsAsString = (expression: string | string[]) =>
-    Array.isArray(expression) ? expression.join(" ") : expression;
-
-  /**
-   * Given a {@link JoinedExpression}, generate keys for all of the inlined attributes as per
-   * DynamoDB's requirements. The key => value mappings are returned in the returned
-   * {@link KeyExpressionResult.names} and {@link KeyExpressionResult.values} properties so they can
-   * be forwarded along to the DynamoDB client's {@link ExpressionAttributeNames} and
-   * {@link ExpressionAttributeValues} parameters.
-   *
-   * We also substitute these attributes for their key names and return the resulting string. If we
-   * receive an array of {@link JoinedExpression}, we'll apply this operation to each of the
-   * elements and return an array of {@link JoinedExpression} instead.
-   *
-   * The reason we modify names/values is so that you can continue calling {@link keyExpression}
-   * with those objects to continue building unique keys, as is required for some dynamo APIs where
-   * multiple expressions share the same attribute name and value mappings.
-   *
-   * @param expression tokized expression or list of expressions
-   * @param names expression names to populate
-   * @param values expression values to populate
-   * @returns string or string[] containing the attribute mappings and the string expression (or
-   * expressions in the case of multiple input expressions)
-   */
-  private static keyExpression = (
-    expression: JoinedExpression | JoinedExpression[],
-    names: Record<string, string>,
-    values: Record<string, string>
-  ): string | string[] => {
-    if (Array.isArray(expression)) {
-      // Apply this method to all of the expressions and then returned the joined result.
-      return expression.map((expression) =>
-        this.keyExpression(expression, names, values)
-      ) as string[];
-    }
-
-    // Determine the final string by substituting inline attributes with the keys to them. Along the
-    // way, store the keys and their associated values in names and values.
-    return expression.expressions
-      .map((expression): SlickExpression => {
-        if (expression instanceof InlineAttributeName) {
-          const index = Object.keys(names).length;
-          const key = `#${GeneratedKeyPrefix}${index}`;
-          names[key] = expression.name;
-          return key;
-        } else if (expression instanceof InlineAttributeValue) {
-          const index = Object.keys(values).length;
-          const key = `:${GeneratedKeyPrefix}${index}`;
-          values[key] = expression.value;
-          return key;
-        } else {
-          // it's a string
-          return expression;
-        }
-      })
-      .join("");
-  };
-
-  static convertToScanInput = (
-    params: SlickScanInput
-  ): DynamoDB.DocumentClient.ScanInput => {
-    const { FilterExpression, ProjectionExpression } = params;
-
-    const names = {};
-    const values = {};
-
-    const filter = FilterExpression
-      ? this.keyExpression(FilterExpression, names, values)
-      : null;
-    const projection = ProjectionExpression
-      ? this.keyExpression(ProjectionExpression, names, values)
-      : null;
-
-    return clean({
-      ...params,
-      FilterExpression: filter
-        ? this.booleanExpressionsAsString(filter)
-        : undefined,
-      ProjectionExpression: projection
-        ? this.csvExpressionsAsString(projection)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToUpdateItemInput = (
-    params: SlickUpdateItemInput
-  ): DynamoDB.DocumentClient.UpdateItemInput => {
-    const { UpdateExpression, ConditionExpression } = params;
-
-    const names = {};
-    const values = {};
-
-    const update = UpdateExpression
-      ? this.keyExpression(UpdateExpression, names, values)
-      : null;
-    const condition = ConditionExpression
-      ? this.keyExpression(ConditionExpression, names, values)
-      : null;
-
-    return clean({
-      ...params,
-      UpdateExpression: update
-        ? this.updateExpressionsAsString(update)
-        : undefined,
-      ConditionExpression: condition
-        ? this.booleanExpressionsAsString(condition)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToQueryInput = (
-    params: SlickQueryInput
-  ): DynamoDB.DocumentClient.QueryInput => {
-    const { FilterExpression, KeyConditionExpression, ProjectionExpression } =
-      params;
-
-    const names = {};
-    const values = {};
-
-    const condition = this.keyExpression(KeyConditionExpression, names, values);
-    const filter = FilterExpression
-      ? this.keyExpression(FilterExpression, names, values)
-      : null;
-    const projection = ProjectionExpression
-      ? this.keyExpression(ProjectionExpression, names, values)
-      : undefined;
-
-    return clean({
-      ...params,
-      KeyConditionExpression: this.booleanExpressionsAsString(condition),
-      FilterExpression: filter
-        ? this.booleanExpressionsAsString(filter)
-        : undefined,
-      ProjectionExpression: projection
-        ? this.csvExpressionsAsString(projection)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToPutItemInput = (
-    params: SlickPutItemInput
-  ): DynamoDB.DocumentClient.PutItemInput => {
-    const { ConditionExpression } = params;
-
-    const names = {};
-    const values = {};
-
-    const condition = ConditionExpression
-      ? this.keyExpression(ConditionExpression, names, values)
-      : null;
-
-    return clean({
-      ...params,
-      ConditionExpression: condition
-        ? this.booleanExpressionsAsString(condition)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToGetItemInput = (
-    params: SlickGetItemInput
-  ): DynamoDB.DocumentClient.GetItemInput => {
-    const { ProjectionExpression } = params;
-
-    const names = {};
-
-    const projection = ProjectionExpression
-      ? this.keyExpression(ProjectionExpression, names, {})
-      : null;
-
-    return clean({
-      ...params,
-      ProjectionExpression: projection
-        ? this.csvExpressionsAsString(projection)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-    });
-  };
-
-  static convertToDeleteItemInput = (
-    params: SlickDeleteItemInput
-  ): DynamoDB.DocumentClient.DeleteItemInput => {
-    const { ConditionExpression } = params;
-
-    const names = {};
-    const values = {};
-
-    const condition = ConditionExpression
-      ? this.keyExpression(ConditionExpression, names, values)
-      : null;
-
-    return clean({
-      ...params,
-      ConditionExpression: condition
-        ? this.booleanExpressionsAsString(condition)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToBatchGetItemInput = (
-    params: SlickBatchGetItemInput
-  ): DynamoDB.DocumentClient.BatchGetItemInput => {
-    const requestItems: DynamoDB.DocumentClient.BatchGetRequestMap =
-      Object.entries(params.RequestItems).reduce(
-        (obj: DynamoDB.DocumentClient.BatchGetRequestMap, [key, item]) => {
-          const { ProjectionExpression } = item;
-          const names = {};
-
-          const projection = ProjectionExpression
-            ? this.keyExpression(ProjectionExpression, names, {})
-            : null;
-
-          obj[key] = clean({
-            ...item,
-            ProjectionExpression: projection
-              ? this.csvExpressionsAsString(projection)
-              : undefined,
-            ExpressionAttributeNames: undefinedIfEmpty(names),
-          });
-
-          return obj;
-        },
-        {}
-      );
-
-    return {
-      ...params,
-      RequestItems: requestItems,
-    };
-  };
-
-  static convertToConditionCheck = (
-    conditionCheck: SlickConditionCheck
-  ): DynamoDB.DocumentClient.ConditionCheck => {
-    const { ConditionExpression } = conditionCheck;
-
-    const names = {};
-    const values = {};
-
-    const condition = this.keyExpression(ConditionExpression, names, values);
-
-    return clean({
-      ...conditionCheck,
-      ConditionExpression: this.booleanExpressionsAsString(condition),
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToDelete = (
-    request: SlickDelete
-  ): DynamoDB.DocumentClient.Delete => {
-    const { ConditionExpression } = request;
-
-    const names = {};
-    const values = {};
-
-    const condition = ConditionExpression
-      ? this.keyExpression(ConditionExpression, names, values)
-      : null;
-
-    return clean({
-      ...request,
-      ConditionExpression: condition
-        ? this.booleanExpressionsAsString(condition)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToPut = (request: SlickPut): DynamoDB.DocumentClient.Put => {
-    const { ConditionExpression } = request;
-
-    const names = {};
-    const values = {};
-
-    const condition = ConditionExpression
-      ? this.keyExpression(ConditionExpression, names, values)
-      : null;
-
-    return clean({
-      ...request,
-      ConditionExpression: condition
-        ? this.booleanExpressionsAsString(condition)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToUpdate = (
-    request: SlickUpdate
-  ): DynamoDB.DocumentClient.Update => {
-    const { ConditionExpression, UpdateExpression } = request;
-
-    const names = {};
-    const values = {};
-
-    const update = this.keyExpression(UpdateExpression, names, values);
-
-    const condition = ConditionExpression
-      ? this.keyExpression(ConditionExpression, names, values)
-      : null;
-
-    return clean({
-      ...request,
-      UpdateExpression: this.updateExpressionsAsString(update),
-      ConditionExpression: condition
-        ? this.booleanExpressionsAsString(condition)
-        : undefined,
-      ExpressionAttributeNames: undefinedIfEmpty(names),
-      ExpressionAttributeValues: undefinedIfEmpty(values),
-    });
-  };
-
-  static convertToTransactWrite = (
-    params: SlickTransactWriteItemsInput
-  ): DynamoDB.DocumentClient.TransactWriteItemsInput => {
-    const itemList: DynamoDB.DocumentClient.TransactWriteItemList =
-      params.TransactItems.map((item) => {
-        const { ConditionCheck, Delete, Put, Update } = item;
-
-        return clean({
-          ...item,
-          ConditionCheck: ConditionCheck
-            ? this.convertToConditionCheck(ConditionCheck)
-            : undefined,
-          Delete: Delete ? this.convertToDelete(Delete) : undefined,
-          Put: Put ? this.convertToPut(Put) : undefined,
-          Update: Update ? this.convertToUpdate(Update) : undefined,
-        });
-      });
-
-    return clean({
-      ...params,
-      TransactItems: itemList,
-    });
-  };
-
-  static convertToTransactGet = (
-    params: SlickTransactGetItemsInput
-  ): DynamoDB.DocumentClient.TransactGetItemsInput => {
-    const itemList: DynamoDB.DocumentClient.TransactGetItemList =
-      params.TransactItems.map((item) => {
-        const { ProjectionExpression } = item.Get;
-        const names = {};
-
-        const projection = ProjectionExpression
-          ? this.keyExpression(ProjectionExpression, names, {})
-          : null;
-
-        return clean({
-          ...item,
-          Get: {
-            ...item.Get,
-            ProjectionExpression: projection
-              ? this.csvExpressionsAsString(projection)
-              : undefined,
-            ExpressionAttributeNames: undefinedIfEmpty(names),
-          },
-        });
-      });
-
-    return clean({
-      ...params,
-      TransactItems: itemList,
-    });
-  };
+  createSet = (
+    list: number[] | string[] | DocumentClient.binaryType[],
+    options?: DocumentClient.CreateSetOptions
+  ): DocumentClient.DynamoDbSet => this.delegate.createSet(list, options);
 
   /**
    * Edits an existing item's attributes, or adds a new item to the table if it does not already
@@ -492,7 +72,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DynamoDB.Types.UpdateItemOutput) => void
   ): Request<DynamoDB.DocumentClient.UpdateItemOutput, AWSError> {
     return this.delegate.update(
-      SlickDynamoDB.convertToUpdateItemInput(params),
+      SlickConverter.convertToUpdateItemInput(params),
       callback
     );
   }
@@ -506,7 +86,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DocumentClient.QueryOutput) => void
   ): Request<DocumentClient.QueryOutput, AWSError> => {
     return this.delegate.query(
-      SlickDynamoDB.convertToQueryInput(params),
+      SlickConverter.convertToQueryInput(params),
       callback
     );
   };
@@ -520,7 +100,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DocumentClient.ScanOutput) => void
   ): Request<DocumentClient.ScanOutput, AWSError> => {
     return this.delegate.scan(
-      SlickDynamoDB.convertToScanInput(params),
+      SlickConverter.convertToScanInput(params),
       callback
     );
   };
@@ -534,7 +114,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DocumentClient.PutItemOutput) => void
   ): Request<DocumentClient.PutItemOutput, AWSError> => {
     return this.delegate.put(
-      SlickDynamoDB.convertToPutItemInput(params),
+      SlickConverter.convertToPutItemInput(params),
       callback
     );
   };
@@ -548,7 +128,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DocumentClient.GetItemOutput) => void
   ): Request<DocumentClient.GetItemOutput, AWSError> => {
     return this.delegate.get(
-      SlickDynamoDB.convertToGetItemInput(params),
+      SlickConverter.convertToGetItemInput(params),
       callback
     );
   };
@@ -561,7 +141,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DocumentClient.DeleteItemOutput) => void
   ): Request<DocumentClient.DeleteItemOutput, AWSError> => {
     return this.delegate.delete(
-      SlickDynamoDB.convertToDeleteItemInput(params),
+      SlickConverter.convertToDeleteItemInput(params),
       callback
     );
   };
@@ -589,7 +169,7 @@ export class SlickDynamoDB {
     callback?: (err: AWSError, data: DocumentClient.BatchGetItemOutput) => void
   ): Request<DocumentClient.BatchGetItemOutput, AWSError> => {
     return this.delegate.batchGet(
-      SlickDynamoDB.convertToBatchGetItemInput(params),
+      SlickConverter.convertToBatchGetItemInput(params),
       callback
     );
   };
@@ -606,7 +186,7 @@ export class SlickDynamoDB {
     ) => void
   ): Request<DocumentClient.TransactGetItemsOutput, AWSError> => {
     return this.delegate.transactGet(
-      SlickDynamoDB.convertToTransactGet(params),
+      SlickConverter.convertToTransactGet(params),
       callback
     );
   };
@@ -622,7 +202,7 @@ export class SlickDynamoDB {
     ) => void
   ): Request<DocumentClient.TransactWriteItemsOutput, AWSError> => {
     return this.delegate.transactWrite(
-      SlickDynamoDB.convertToTransactWrite(params),
+      SlickConverter.convertToTransactWrite(params),
       callback
     );
   };

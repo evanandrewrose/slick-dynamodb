@@ -4,14 +4,19 @@
 
 This is a small wrapper around the [DynamoDB Document
 Client](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html), which
-removes the burden of managing attribute names and values by introducing helper methods that are
-used in conjunction with the wrapper.
+removes the burden of managing [attribute
+names](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeNames.html)
+and
+[values](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeValues.html)
+by introducing helper methods that are used in conjunction with the wrapper.
 
-The recommended usage is that users wrap expressions with `x()` (imported alias) and then wrap their
-attribute names with `n()` and values with `v()`. So:
+To use, just write your expressions as a list of strings/attributes and then wrap the attribute
+names with `n()` and values with `v()`.
+
+So this:
 
 ```typescript
-{
+{ // dynamodb document api
   UpdateExpression: 'set path.to.#identifier = :new_count',
   ExpressionAttributeNames: {
       '#identifier': 'count'
@@ -25,8 +30,8 @@ attribute names with `n()` and values with `v()`. So:
 becomes:
 
 ```typescript
-{
-  UpdateExpression: x("set path.to.", n('count'), " = ", v(1)),
+{ // slick api
+  UpdateExpression: ["set path.to.", n('count'), " = ", v(1)],
 }
 ```
 
@@ -39,12 +44,7 @@ These expressions can be referred to as "`x()`-expressions".
 ## Example
 
 ```typescript
-import {
-  SlickDynamoDB,
-  joined as x,
-  name as n,
-  value as v,
-} from "slick-dynamodb";
+import { SlickDynamoDB, name as n, value as v } from "slick-dynamodb";
 
 const user = "evan";
 const client = new SlickDynamoDB(documentClient);
@@ -53,17 +53,17 @@ await client
   .update({
     TableName: "MyTable",
     Key: {
-      pk: `GAME#001`,
-      sk: `GAME#001`,
+      pk: "GAME#001",
+      sk: "GAME#001",
     },
     UpdateExpression: [
-      x("SET users.", n(user), ".ready = ", v(true)),
-      x("ADD version ", v(1)),
+      ["SET users.", n(user), ".ready = ", v(true)],
+      ["ADD version ", v(1)],
     ],
     ConditionExpression: [
-      x("attribute_exists(users.", n(user), ")"),
-      x(n("state"), " = ", v("WAITING")),
-      x("version = ", v(1)),
+      ["attribute_exists(users.", n(user), ")"],
+      [n("state"), " = ", v("WAITING")],
+      ["version = ", v(1)],
     ],
     ReturnValues: "ALL_NEW",
   })
@@ -106,7 +106,9 @@ await documentClient
 ## Other APIs
 
 All of the DynamoDB Document APIs are supported. If the Document API allowed you to reference a
-given input property, then SlickDynamoDB expects an "`x()`-expression".
+given input property, then SlickDynamoDB expects a `SlickExpression`.
+
+A `SlickExpression` can be:
 
 ## Passing arrays of "`x()`-expressions"
 
