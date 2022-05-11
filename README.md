@@ -104,9 +104,9 @@ await documentClient
 ## Working with the client APIs
 
 All of the DynamoDB Document APIs are supported. If the Document API allowed you to reference a
-given input property, then SlickDynamoDB expects a `SlickExpression`.
+given input property, then SlickDynamoDB expects a `SlickExpressionInput`.
 
-A `SlickExpression` can be:
+A `SlickExpressionInput` can be:
 
 - A unary expression:
   - single attribute: `v(123)`
