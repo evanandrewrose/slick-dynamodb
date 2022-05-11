@@ -135,9 +135,10 @@ Because projections are csv-lists, the API will only accept single-dimensional e
 are examples:
 
 ```typescript
-ProjectionExpression: "foo"; // valid
-ProjectionExpression: n("foo"); // valid
-ProjectionExpression: [n("foo"), n("bar")]; // valid
+ProjectionExpression: "foo"; // valid, becomes "foo"
+ProjectionExpression: n("foo"); // valid, becomes "#k0", generates names {k0: "foo"}
+ProjectionExpression: [n("foo"), n("bar")]; // valid, becomes "#k0, #k1", generates names {k0: "foo", k1: "bar"}
+ProjectionExpression: [n("foo"), "bar"]; // valid, becomes "#k0, bar", generates names {k0: "foo"}
 ProjectionExpression: [
   [n("foo"), n("bar")],
   [n("foo"), n("bar")],
