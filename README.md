@@ -112,10 +112,10 @@ A `SlickExpressionInput` can be:
   - single attribute: `v(123)`
   - string: `"attribute_exists(foo)"`
 - A composite expression:
-  - attributes and strings: ['name = ', n('evan')]
-  - only attributes: [n('foo'), n('bar')]
+  - attributes and strings: `['name = ', n('evan')]`
+  - only attributes: `[n('foo'), n('bar')]`
 - A list of composite expressions:
-  - list of above expressions: [["foo = ", n(foo)], ["bar = ", v(bar)]]
+  - list of above expressions: `[["foo = ", n(foo)], ["bar = ", v(bar)]]`
 
 ## Passing a list of composite expressions
 
